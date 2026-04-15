@@ -600,6 +600,10 @@ setInterval(() => {
   slotProfile = averageSlotProfile(historicalData);
 }, 15 * 60 * 1000);
 
+app.get("/trigger", (_req, res) => {
+  res.sendFile(path.join(__dirname, "public", "trigger", "index.html"));
+});
+
 app.get("*", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
