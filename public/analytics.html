@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Air Intelligence Analytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="layout analytics-layout">
+      <header class="topbar panel">
+        <div>
+          <p class="eyebrow">Indoor Air Intelligence</p>
+          <h1>Analytics Dashboard</h1>
+          <p class="subline">Visual analytics generated from 10-minute MQ135 predictions and live model context.</p>
+        </div>
+        <div class="topbar-right">
+          <a class="analytics-btn" href="index.html">Back To Dashboard</a>
+        </div>
+      </header>
+
+      <section class="panel export-toolbar">
+        <div class="export-actions">
+          <button id="exportPngBtn" class="export-btn" disabled>Export Charts As PNG</button>
+          <button id="exportPdfBtn" class="export-btn" disabled>Export Charts As PDF</button>
+        </div>
+        <p id="exportStatus" class="export-status">Loading analytics data...</p>
+      </section>
+
+      <section class="analytics-summary" id="analyticsSummary">
+        <article class="panel summary-card">
+          <p class="summary-label">Average MQ135 PPM</p>
+          <h2 id="avgPpm">--</h2>
+        </article>
+        <article class="panel summary-card">
+          <p class="summary-label">Peak IAQ Score</p>
+          <h2 id="peakIaq">--</h2>
+        </article>
+        <article class="panel summary-card">
+          <p class="summary-label">Digital Alert Ratio</p>
+          <h2 id="alertRatio">--</h2>
+        </article>
+      </section>
+
+      <section class="chart-grid">
+        <article class="panel chart-card">
+          <div class="card-head">
+            <h2>MQ135 PPM Trend (24h)</h2>
+          </div>
+          <canvas id="ppmTrendChart"></canvas>
+        </article>
+
+        <article class="panel chart-card">
+          <div class="card-head">
+            <h2>Average PPM By Time Block</h2>
+          </div>
+          <canvas id="ppmBarChart"></canvas>
+        </article>
+
+        <article class="panel chart-card">
+          <div class="card-head">
+            <h2>Air Quality Level Distribution</h2>
+          </div>
+          <canvas id="levelPieChart"></canvas>
+        </article>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+    <script src="analytics.js"></script>
+  </body>
+</html>

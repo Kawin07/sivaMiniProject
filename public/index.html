@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Air Intelligence Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <header class="topbar panel">
+        <div>
+          <p class="eyebrow">Indoor Air Intelligence</p>
+          <h1>Air Quality Prediction Dashboard</h1>
+          <p class="subline">
+            MQ135-based 2,000-point historical model, 10-minute prediction cadence, and external ESP trigger integration.
+          </p>
+        </div>
+        <div class="topbar-right">
+          <a class="analytics-btn" href="analytics.html">Analytics</a>
+          <div class="status-wrap">
+            <div class="status-card">
+              <span class="status-label">Model Basis</span>
+              <strong id="historicalCount">2,000 records</strong>
+            </div>
+            <div class="status-card">
+              <span class="status-label">Trigger Channel</span>
+              <strong>ESP_TRIGGER</strong>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="grid-two">
+        <article class="panel">
+          <div class="card-head">
+            <h2>Current Indoor Air Quality</h2>
+            <span class="pill" id="currentLevel">----</span>
+          </div>
+          <div class="metrics" id="currentMetrics"></div>
+        </article>
+
+        <article class="panel live-panel">
+          <div class="card-head">
+            <h2>Real-Time Meter (ESP Triggered)</h2>
+            <span class="pill muted" id="triggerState">Waiting</span>
+          </div>
+
+          <div class="live-provider" id="liveProvider">No stream active</div>
+          <div class="metrics" id="liveMetrics"></div>
+        </article>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="card-head table-head">
+          <div>
+            <h2>10-Minute MQ135 Prediction Table</h2>
+            <p class="muted-text">Forecast horizon: next 24 hours using 2,000 historical MQ135 records</p>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>IAQ Score</th>
+                <th>Status</th>
+                <th>MQ135 PPM</th>
+                <th>Rs/Ro</th>
+                <th>Analog (V)</th>
+                <th>ADC</th>
+                <th>Digital Alert</th>
+                <th>Poonamallee Temp (C)</th>
+              </tr>
+            </thead>
+            <tbody id="predictionRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

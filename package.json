@@ -1,0 +1,19 @@
+{
+  "name": "airquality-dashboard",
+  "version": "1.0.0",
+  "description": "Professional indoor air quality prediction dashboard with ESP trigger simulation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "morgan": "^1.10.0"
+  }
+}
