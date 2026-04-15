@@ -13,6 +13,8 @@ const OPEN_METEO_LAT = Number(process.env.OPEN_METEO_LAT || 13.0472);
 const OPEN_METEO_LON = Number(process.env.OPEN_METEO_LON || 80.0945);
 const TRIGGER_ALLOWED_ORIGIN = process.env.TRIGGER_ALLOWED_ORIGIN || "*";
 const MQ135_DIGITAL_THRESHOLD_PPM = Number(process.env.MQ135_DIGITAL_THRESHOLD_PPM || 420);
+const LIVE_PPM_TARGET_MIN = Number(process.env.LIVE_PPM_TARGET_MIN || 250);
+const LIVE_PPM_TARGET_MAX = Number(process.env.LIVE_PPM_TARGET_MAX || 300);
 
 const TEN_MINUTES_MS = 10 * 60 * 1000;
 const HISTORY_POINTS = 2000;
@@ -385,14 +387,18 @@ async function fetchLiveAirReference() {
 }
 
 function blendLiveMq135(reference, indoorBase) {
-  const pulse = Math.sin(Date.now() / 170000);
+  const pulse = Math.sin(Date.now() / 210000);
+  const liveMin = Math.min(LIVE_PPM_TARGET_MIN, LIVE_PPM_TARGET_MAX);
+  const liveMax = Math.max(LIVE_PPM_TARGET_MIN, LIVE_PPM_TARGET_MAX);
+  const span = Math.max(1, liveMax - liveMin);
+
+  // Keep live stream around a controlled band while preserving gentle variation.
+  const normalizedAqi = clamp((reference.usAqi + reference.euAqi) / 2, 0, 300) / 300;
+  const baseline = liveMin + normalizedAqi * span;
   const estimatedPpm = clamp(
-    indoorBase.estimatedPpm * 0.56 +
-      reference.usAqi * 5.1 +
-      reference.euAqi * 2.6 +
-      12 * pulse,
-    70,
-    1900
+    baseline + indoorBase.estimatedPpm * 0.02 + 4.5 * pulse,
+    liveMin,
+    liveMax
   );
 
   return buildMq135Reading(Date.now(), estimatedPpm);
