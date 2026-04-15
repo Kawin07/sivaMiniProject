@@ -122,7 +122,18 @@ async function loadDashboard() {
   const data = await response.json();
 
   historicalCount.textContent = `${data.historicalCount.toLocaleString()} records`;
+  renderCurrent(data.current);
   renderPredictions(data.predictions);
+}
+
+async function refreshCurrent() {
+  try {
+    const res = await fetch("/api/indoor-summary");
+    const payload = await res.json();
+    renderCurrent(payload.current);
+  } catch (_error) {
+    // Keep previous values if current snapshot fetch temporarily fails.
+  }
 }
 
 async function refreshLive() {
@@ -132,22 +143,20 @@ async function refreshLive() {
 
     if (payload && payload.active && payload.live) {
       renderCurrent(payload.live);
-    } else {
-      renderCurrentPlaceholder();
     }
 
     renderLive(payload);
   } catch (_error) {
-    renderCurrentPlaceholder();
     renderLive(null);
   }
 }
 
 async function boot() {
-  renderCurrentPlaceholder();
   await loadDashboard();
+  await refreshCurrent();
   await refreshLive();
 
+  setInterval(refreshCurrent, 12000);
   setInterval(refreshLive, 10000);
 }
 

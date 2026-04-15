@@ -9,7 +9,7 @@ const app = express();
 
 const PORT = Number(process.env.PORT || 3000);
 const ESP_TRIGGER = process.env.ESP_TRIGGER || "dev-esp-trigger";
-const TRIGGER_ACTIVE_MINUTES = Number(process.env.TRIGGER_ACTIVE_MINUTES || 30);
+const TRIGGER_ACTIVE_MINUTES = Number(process.env.TRIGGER_ACTIVE_MINUTES || 60);
 const OPEN_METEO_LAT = Number(process.env.OPEN_METEO_LAT || 13.0472);
 const OPEN_METEO_LON = Number(process.env.OPEN_METEO_LON || 80.0945);
 const TRIGGER_ALLOWED_ORIGIN = process.env.TRIGGER_ALLOWED_ORIGIN || "*";
@@ -406,13 +406,6 @@ const espState = {
   source: "inactive",
 };
 
-const labLiveState = {
-  currentPpm: null,
-  eventBoost: 0,
-  latestReading: null,
-  lastUpdatedAt: null,
-};
-
 function isTriggerActive() {
   if (!espState.active) return false;
   if (espState.expiresAt && Date.now() > espState.expiresAt) {
@@ -421,50 +414,6 @@ function isTriggerActive() {
     return false;
   }
   return true;
-}
-
-function labBaselinePpm(timestamp) {
-  const date = new Date(timestamp);
-  const hour = date.getHours() + date.getMinutes() / 60;
-  const occupancy = occupancyByHour(hour);
-  return 135 + 185 * occupancy;
-}
-
-async function generateLabLiveReading() {
-  const now = Date.now();
-
-  if (labLiveState.currentPpm == null) {
-    labLiveState.currentPpm = getCurrentIndoorSnapshot().estimatedPpm;
-  }
-
-  const baseline = labBaselinePpm(now);
-  const drift = (Math.random() * 20) - 10;
-
-  // Occasional lab activity bumps around +25 ppm, then decay back to normal.
-  if (Math.random() < 0.12) {
-    labLiveState.eventBoost += 25 + Math.random() * 12;
-  }
-
-  const pullToBaseline = (baseline - labLiveState.currentPpm) * 0.22;
-  const eventComponent = labLiveState.eventBoost * 0.42;
-  labLiveState.eventBoost *= 0.72;
-
-  labLiveState.currentPpm = round(
-    clamp(labLiveState.currentPpm + drift + pullToBaseline + eventComponent, 70, 1900),
-    1
-  );
-
-  const weather = await fetchPoonamalleeWeather().catch(() => null);
-
-  const reading = {
-    ...buildMq135Reading(now, labLiveState.currentPpm),
-    temperature: weather ? weather.currentTemp : null,
-  };
-
-  labLiveState.latestReading = reading;
-  labLiveState.lastUpdatedAt = now;
-
-  return reading;
 }
 
 app.get("/api/indoor-summary", async (_req, res) => {
@@ -580,11 +529,6 @@ app.post("/api/esp-trigger", (req, res) => {
     espState.activatedAt = null;
     espState.expiresAt = null;
 
-    labLiveState.currentPpm = null;
-    labLiveState.eventBoost = 0;
-    labLiveState.latestReading = null;
-    labLiveState.lastUpdatedAt = null;
-
     return res.json({
       ok: true,
       message: "Live stream stopped",
@@ -597,12 +541,6 @@ app.post("/api/esp-trigger", (req, res) => {
   espState.source = req.body.source || "external-trigger";
   espState.activatedAt = now;
   espState.expiresAt = now + TRIGGER_ACTIVE_MINUTES * 60 * 1000;
-
-  labLiveState.currentPpm = null;
-  labLiveState.eventBoost = 0;
-  labLiveState.latestReading = null;
-  labLiveState.lastUpdatedAt = null;
-  generateLabLiveReading().catch(() => null);
 
   return res.json({
     ok: true,
@@ -625,24 +563,27 @@ app.get("/api/live-air", async (_req, res) => {
   }
 
   try {
-    let live = labLiveState.latestReading;
-    const now = Date.now();
-    const stale = !labLiveState.lastUpdatedAt || now - labLiveState.lastUpdatedAt > 15 * 1000;
+    const [airReference, weather] = await Promise.all([
+      fetchLiveAirReference(),
+      fetchPoonamalleeWeather().catch(() => null),
+    ]);
 
-    if (!live || stale) {
-      live = await generateLabLiveReading();
-    }
+    const indoorBase = getCurrentIndoorSnapshot();
+    const live = {
+      ...blendLiveMq135(airReference, indoorBase),
+      temperature: weather ? weather.currentTemp : null,
+    };
 
     return res.json({
       ok: true,
       active: true,
       sensor: "MQ135",
       triggerName: "ESP_TRIGGER",
-      provider: "College Computer Lab Simulation",
-      observedAt: new Date(live.timestamp).toISOString(),
-      weatherProvider: "Open-Meteo Forecast API",
-      weatherPlace: "Poonamallee",
-      airReference: null,
+      provider: airReference.provider,
+      observedAt: airReference.observedAt,
+      weatherProvider: weather ? weather.provider : null,
+      weatherPlace: weather ? weather.place : null,
+      airReference,
       live,
     });
   } catch (error) {
@@ -658,14 +599,6 @@ setInterval(() => {
   historicalData = generateHistoricalData(HISTORY_POINTS);
   slotProfile = averageSlotProfile(historicalData);
 }, 15 * 60 * 1000);
-
-setInterval(() => {
-  if (!isTriggerActive()) {
-    return;
-  }
-
-  generateLabLiveReading().catch(() => null);
-}, 10 * 1000);
 
 app.get("*", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
