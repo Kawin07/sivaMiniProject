@@ -64,9 +64,9 @@ function renderCurrent(data) {
 
 function renderLive(payload) {
   if (!payload || !payload.active || !payload.live) {
-    triggerState.textContent = "Waiting";
+    triggerState.textContent = "Stopped";
     triggerState.className = "pill muted";
-    liveProvider.textContent = "No stream active. Waiting for external trigger...";
+    liveProvider.textContent = "No stream active. Real data: ----";
 
     liveMetrics.innerHTML = [
       metricCard("IAQ Score", "----"),

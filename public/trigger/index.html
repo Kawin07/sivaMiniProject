@@ -40,8 +40,13 @@
         color: #3f5878;
       }
 
-      button {
+      .actions {
+        display: flex;
+        gap: 10px;
         margin-top: 18px;
+      }
+
+      button {
         border: 1px solid var(--blue-dark);
         background: var(--blue-dark);
         color: var(--white);
@@ -61,6 +66,15 @@
         cursor: not-allowed;
       }
 
+      #stopBtn {
+        background: #f5f8fc;
+        color: var(--blue-dark);
+      }
+
+      #stopBtn:hover {
+        background: #e8f0fb;
+      }
+
       pre {
         margin-top: 14px;
         padding: 10px;
@@ -74,10 +88,13 @@
   </head>
   <body>
     <main class="wrap">
-      <h1>Start ESP Trigger</h1>
+      <h1>ESP Trigger Control</h1>
       <p>Runs inside this same project at <strong>/trigger</strong> and calls local API routes.</p>
 
-      <button id="startBtn" type="button">Start Trigger</button>
+      <div class="actions">
+        <button id="startBtn" type="button">Start Trigger</button>
+        <button id="stopBtn" type="button">Stop Trigger</button>
+      </div>
       <pre id="output">Ready.</pre>
     </main>
 
@@ -86,11 +103,13 @@
       const TRIGGER_SOURCE = "local-trigger-page";
 
       const startBtn = document.getElementById("startBtn");
+      const stopBtn = document.getElementById("stopBtn");
       const output = document.getElementById("output");
 
-      async function startTrigger() {
+      async function sendTrigger(action) {
         startBtn.disabled = true;
-        output.textContent = "Sending start trigger...";
+        stopBtn.disabled = true;
+        output.textContent = `Sending ${action} trigger...`;
 
         try {
           const response = await fetch(API_ENDPOINT, {
@@ -99,12 +118,15 @@
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              action: "start",
+              action,
               source: TRIGGER_SOURCE,
             }),
           });
 
           const data = await response.json();
+          if (action === "stop") {
+            data.liveData = "----";
+          }
           output.textContent = JSON.stringify(data, null, 2);
         } catch (error) {
           output.textContent = JSON.stringify(
@@ -117,10 +139,12 @@
           );
         } finally {
           startBtn.disabled = false;
+          stopBtn.disabled = false;
         }
       }
 
-      startBtn.addEventListener("click", startTrigger);
+      startBtn.addEventListener("click", () => sendTrigger("start"));
+      stopBtn.addEventListener("click", () => sendTrigger("stop"));
     </script>
   </body>
 </html>
