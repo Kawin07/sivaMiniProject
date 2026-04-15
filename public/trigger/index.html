@@ -40,22 +40,6 @@
         color: #3f5878;
       }
 
-      label {
-        display: block;
-        margin-top: 16px;
-        color: #264264;
-        font-weight: 600;
-      }
-
-      input {
-        width: 100%;
-        margin-top: 8px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 10px;
-        font-size: 14px;
-      }
-
       button {
         margin-top: 18px;
         border: 1px solid var(--blue-dark);
@@ -93,9 +77,6 @@
       <h1>Start ESP Trigger</h1>
       <p>Runs inside this same project at <strong>/trigger</strong> and calls local API routes.</p>
 
-      <label for="espSecret">ESP trigger secret</label>
-      <input id="espSecret" type="password" placeholder="Enter your ESP_TRIGGER value" autocomplete="off" />
-
       <button id="startBtn" type="button">Start Trigger</button>
       <pre id="output">Ready.</pre>
     </main>
@@ -106,16 +87,8 @@
 
       const startBtn = document.getElementById("startBtn");
       const output = document.getElementById("output");
-      const espSecret = document.getElementById("espSecret");
 
       async function startTrigger() {
-        const secret = espSecret.value.trim();
-
-        if (!secret) {
-          output.textContent = "Enter ESP_TRIGGER first.";
-          return;
-        }
-
         startBtn.disabled = true;
         output.textContent = "Sending start trigger...";
 
@@ -124,7 +97,6 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-esp-trigger": secret,
             },
             body: JSON.stringify({
               action: "start",

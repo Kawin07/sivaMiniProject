@@ -8,7 +8,6 @@ const morgan = require("morgan");
 const app = express();
 
 const PORT = Number(process.env.PORT || 3000);
-const ESP_TRIGGER = process.env.ESP_TRIGGER || "dev-esp-trigger";
 const TRIGGER_ACTIVE_MINUTES = Number(process.env.TRIGGER_ACTIVE_MINUTES || 60);
 const OPEN_METEO_LAT = Number(process.env.OPEN_METEO_LAT || 13.0472);
 const OPEN_METEO_LON = Number(process.env.OPEN_METEO_LON || 80.0945);
@@ -514,14 +513,6 @@ app.get("/api/esp-state", (_req, res) => {
 });
 
 app.post("/api/esp-trigger", (req, res) => {
-  const candidate = req.header("x-esp-trigger") || (req.body && req.body.espTrigger) || "";
-  if (!candidate || candidate !== ESP_TRIGGER) {
-    return res.status(403).json({
-      ok: false,
-      error: "Invalid trigger credential",
-    });
-  }
-
   const action = (req.body && req.body.action) || "start";
   if (action === "stop") {
     espState.active = false;
@@ -610,6 +601,5 @@ app.get("*", (_req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Air dashboard running at http://localhost:${PORT}`);
-  console.log("ESP trigger header key expected: x-esp-trigger");
-  console.log("Active env variable name: ESP_TRIGGER");
+  console.log("ESP trigger endpoint is enabled with no credential.");
 });
